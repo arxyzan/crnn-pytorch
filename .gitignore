@@ -118,5 +118,5 @@ venv.bak/
 */key/ssl.crt
 */key/ssl.key
 
-data/
+myjsynth/
 .idea/
