@@ -3,10 +3,10 @@ import torch
 import numpy as np
 from PIL import Image
 
-from config import common_config as config
+from model.config import common_config as config
 from dataset import Synth90kDataset
 from model import CRNN
-from ctc_decoder import ctc_decode
+from model.ctc_decoder import ctc_decode
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--image', type=str,

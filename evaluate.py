@@ -5,8 +5,8 @@ from tqdm import tqdm
 
 from dataset import Synth90kDataset, synth90k_collate_fn
 from model import CRNN
-from ctc_decoder import ctc_decode
-from config import evaluate_config as config
+from model.ctc_decoder import ctc_decode
+from model.config import evaluate_config as config
 
 torch.backends.cudnn.enabled = False
 
