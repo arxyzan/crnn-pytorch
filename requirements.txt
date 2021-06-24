@@ -1,0 +1,8 @@
+docopt
+numpy
+opencv-python
+pillow
+scipy
+six
+torch
+tqdm
