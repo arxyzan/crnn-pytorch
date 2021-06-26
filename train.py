@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from torch.nn import CTCLoss
-
+from tqdm import tqdm
 from dataset import Synth90kDataset, synth90k_collate_fn
 from model import CRNN
 from evaluate import evaluate
@@ -16,13 +16,13 @@ def train_batch(crnn, data, optimizer, criterion, device):
     images, targets, target_lengths = [d.to(device) for d in data]
 
     logits = crnn(images)
-    log_probs = torch.nn.functional.log_softmax(logits, dim=2)
+    log_probs = torch.nn.functional.log_softmax(logits, 2)
 
     batch_size = images.size(0)
     input_lengths = torch.LongTensor([logits.size(0)] * batch_size)
     target_lengths = torch.flatten(target_lengths)
 
-    loss = criterion(log_probs, targets, input_lengths, target_lengths)
+    loss = criterion(log_probs, targets, input_lengths, target_lengths) / batch_size
 
     optimizer.zero_grad()
     loss.backward()
@@ -83,35 +83,23 @@ def main():
     i = 1
     for epoch in range(1, epochs + 1):
         print(f'epoch: {epoch}')
-        tot_train_loss = 0.
-        tot_train_count = 0
-        for train_data in train_loader:
-            loss = train_batch(crnn, train_data, optimizer, criterion, device)
-            train_size = train_data[0].size(0)
+        with tqdm(train_loader, unit="batch") as tepoch:
+            for train_data in tepoch:
+                loss = train_batch(crnn, train_data, optimizer, criterion, device)
+                tepoch.set_postfix(loss=loss)
+        if epoch % valid_interval == 0:
+            evaluation = evaluate(crnn, valid_loader, criterion,
+                                  decode_method=config['decode_method'],
+                                  beam_size=config['beam_size'])
+            print('valid_evaluation: loss={loss}, acc={acc}'.format(**evaluation))
 
-            tot_train_loss += loss
-            tot_train_count += train_size
-            if i % show_interval == 0:
-                print('train_batch_loss[', i, ']: ', loss / train_size)
-
-            if i % valid_interval == 0:
-                evaluation = evaluate(crnn, valid_loader, criterion,
-                                      decode_method=config['decode_method'],
-                                      beam_size=config['beam_size'])
-                print('valid_evaluation: loss={loss}, acc={acc}'.format(**evaluation))
-
-                if i % save_interval == 0:
-                    prefix = 'crnn'
-                    loss = evaluation['loss']
-                    save_model_path = os.path.join(config['weights_dir'],
-                                                   f'{prefix}_{i:06}_loss{loss}.pt')
-                    torch.save(crnn.state_dict(), save_model_path)
-                    print('save model at ', save_model_path)
-
-            i += 1
-
-        print('train_loss: ', tot_train_loss / tot_train_count)
-
+            if epoch % save_interval == 0:
+                prefix = 'persian-lpr'
+                loss = evaluation['loss']
+                save_model_path = os.path.join(config['weights_dir'],
+                                               f'{prefix}_loss_{loss}.pt')
+                torch.save(crnn.state_dict(), save_model_path)
+                print('save model at ', save_model_path)
 
 if __name__ == '__main__':
     main()

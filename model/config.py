@@ -9,16 +9,14 @@ common_config = {
 }
 
 train_config = {
-    'epochs': 10000,
-    'train_batch_size': 32,
+    'epochs': 250,
+    'train_batch_size': 128,
     'eval_batch_size': 512,
     'lr': 0.0005,
-    'show_interval': 10,
-    'valid_interval': 500,
-    'save_interval': 2000,
+    'valid_interval': 25,
+    'save_interval': 50,
     'cpu_workers': 4,
     'reload_checkpoint': None,
-    'valid_max_iter': 100,
     'decode_method': 'greedy',
     'beam_size': 10,
     'weights_dir': 'weights/'
@@ -28,7 +26,7 @@ train_config.update(common_config)
 evaluate_config = {
     'eval_batch_size': 512,
     'cpu_workers': 4,
-    'reload_checkpoint': 'weights/crnn_.pt',
+    'reload_checkpoint': None,
     'decode_method': 'greedy',
     'beam_size': 10,
 }
